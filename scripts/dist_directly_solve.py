@@ -18,7 +18,7 @@ if __name__ == "__main__":
     start_time = time.time()
     args = sys.argv[1:]
     if not args:
-        args = ["result/sample", "KNprotein", 0, 1, 0]
+        args = ["result", "KNproteinNoisy01_C=7,T=500,K=60", 0, 1, 0]
 
     ### Save Directory ###
     savedirname = args[0]
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     toporep = int(args[3])
     dtm = int(args[4])
     ### Optimization Hyper Parameters ###
-    epoch_num = 200
+    epoch_num = 10 # 200
     warmup_epoch_num = 10
     batch_size = 40
     lr = 2e-2
@@ -39,12 +39,11 @@ if __name__ == "__main__":
     ### Optional Parameters ###
     CV_num = 5
     CV_color_list = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00']
-    plt.rcParams["font.size"] = 30
     method_toporep = "dist"
 
     input_format = "dist"
-    all_X = torch.load(f"data/{dataset}_C=7,T=500,K=60_data").to(torch.float32)
-    all_y = torch.load(f"data/{dataset}_C=7,T=500,K=60_label")
+    all_X = torch.load(f"data/{dataset}_data").to(torch.float32)
+    all_y = torch.load(f"data/{dataset}_label")
     data_num = all_X.shape[0]
     num_points = all_X.shape[1]
     output_dim = 2
@@ -204,17 +203,18 @@ if __name__ == "__main__":
         print(f"{_avg:.2f} ± {_std:.2f}")
         print(f"{_avg:.1f} ± {_std:.1f}")
     
-    fig = plt.figure(figsize=(40, 12))
+    fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
-    ymin, ymax = 1000, 0
-    ax.plot(list(range(epoch_num)), valid_task_loss_list[i], color=CV_color_list)
+    for i in range(CV_num):
+        ax.plot(list(range(epoch_num)), valid_task_loss_list[i], color=CV_color_list[i])
     fig.savefig(f"{savedirname}/loss_history.png")
     if task == "cls":
-        fig = plt.figure(figsize=(40, 12))
+        fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
-        ax.plot(list(range(epoch_num)), valid_task_acc_list[i], color=CV_color_list[i])
+        for i in range(CV_num):
+            ax.plot(list(range(epoch_num)), valid_task_acc_list[i], color=CV_color_list[i])
         fig.savefig(f"{savedirname}/accuracy_history.png")
-    
+
     with open(f"{savedirname}/loss_history", "wb") as f:
         pickle.dump(valid_task_loss_list, f)
     if task == "cls":
